@@ -3,7 +3,7 @@ import * as mammoth from "mammoth";
 
 const C = {
   dark:"#0e1117", darker:"#080b0f", navy:"#141923", card:"#1a2233",
-  border:"#242f45", accent:"#e8a020", green:"#22c55e",
+  border:"#242f45", accent:"#2ec4a0", green:"#22c55e",
   text:"#e8edf5", muted:"#7a8aaa", white:"#ffffff",
 };
 
@@ -198,6 +198,7 @@ export default function App() {
   const [glossText,setGlossText]   = useState("");
   const [glossFiles,setGlossFiles] = useState([]);
   const [glossLinks,setGlossLinks] = useState("");
+  const [userComment,setUserComment] = useState("");
   const [dragOver,setDragOver]     = useState(false);
   const [dragGloss,setDragGloss]   = useState(false);
   const srcRef   = useRef();
@@ -271,6 +272,7 @@ export default function App() {
 - Тип документа: ${docType==="auto"?"определить автоматически":docType}
 
 ${textContent ? `ДОПОЛНИТЕЛЬНЫЙ ТЕКСТ:\n"""\n${textContent.substring(0,2000)}\n"""` : ""}
+${userComment.trim() ? `\nКОММЕНТАРИИ ПОЛЬЗОВАТЕЛЯ:\n${userComment.trim()}` : ""}
 ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}` : ""}
 
 Верни ТОЛЬКО валидный JSON без markdown:
@@ -318,13 +320,11 @@ ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}
 
     try {
       const messages = buildMessages();
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/messages", {
         method:"POST",
         headers:{
-          "Content-Type":"application/json",
-          "x-api-key":apiKey,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true"
+          "content-type":"application/json",
+          "x-api-key": apiKey.trim(),
         },
         body: JSON.stringify({
           model:"claude-sonnet-4-20250514",
@@ -345,7 +345,7 @@ ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}
     } finally { setLoading(false); }
   };
 
-  const reset = () => { setStep(0); setResult(null); setManual(""); setSrcFiles([]); setError(""); };
+  const reset = () => { setStep(0); setResult(null); setManual(""); setSrcFiles([]); setError(""); setUserComment(""); };
 
   const inp = {
     width:"100%",padding:"10px 14px",borderRadius:10,
@@ -466,6 +466,19 @@ ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}
                 </div>
               </div>
 
+              {/* COMMENTS */}
+              <div style={{background:C.darker,borderRadius:12,padding:20,border:`1px solid ${C.border}`,marginBottom:20}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                  <span style={{fontSize:18}}>💬</span>
+                  <span style={{fontWeight:800,fontSize:14,color:C.accent}}>Комментарии для создания промта</span>
+                  <span style={{fontSize:11,color:C.muted,background:C.navy,borderRadius:20,
+                    padding:"2px 10px",border:`1px solid ${C.border}`}}>необязательно</span>
+                </div>
+                <textarea value={userComment} onChange={e=>setUserComment(e.target.value)}
+                  placeholder={"Укажите особые пожелания, контекст или уточнения для промта.\nНапример: «Перевод для буклета, целевая аудитория — инвесторы из ОАЭ», «Сохранить формальный стиль», «Не переводить названия брендов»"}
+                  style={{...inp,minHeight:90,resize:"vertical",lineHeight:1.7,fontSize:13}}/>
+              </div>
+
               {/* GLOSSARY */}
               <div style={{background:C.darker,borderRadius:12,padding:20,border:`1px solid ${C.border}`,marginBottom:20}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
@@ -558,7 +571,7 @@ ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}
                 {error&&<div style={{color:"#ef4444",fontSize:13,fontWeight:700}}>⚠ {error}</div>}
                 <button onClick={buildPrompt} disabled={!canSubmit}
                   style={{padding:"13px 32px",borderRadius:12,border:"none",
-                    background:canSubmit?`linear-gradient(135deg,${C.accent},#f5a623)`:"#1a2233",
+                    background:canSubmit?`linear-gradient(135deg,${C.accent},#34d8b0)`:"#1a2233",
                     color:canSubmit?C.dark:C.muted,fontWeight:800,fontSize:15,
                     cursor:canSubmit?"pointer":"not-allowed",
                     boxShadow:canSubmit?`0 4px 18px ${C.accent}55`:"none",transition:"all .2s"}}>
@@ -636,8 +649,8 @@ ${glossaryBlock ? `\nГЛОССАРИИ И ИСТОЧНИКИ:\n${glossaryBlock}
                   <div style={{fontWeight:800,fontSize:12,color:C.muted,marginBottom:8}}>📚 ГЛОССАРИЙ</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                     {result.analysis.keyTerms.map((t,i)=>(
-                      <span key={i} style={{background:"#1a1500",border:"1px solid #3a3000",
-                        borderRadius:8,padding:"4px 12px",fontSize:12,color:"#d4a800",fontFamily:"monospace"}}>{t}</span>
+                      <span key={i} style={{background:"#0a1f1a",border:"1px solid #1a4a3a",
+                        borderRadius:8,padding:"4px 12px",fontSize:12,color:"#2ec4a0",fontFamily:"monospace"}}>{t}</span>
                     ))}
                   </div>
                 </div>
